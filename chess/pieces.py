@@ -1,10 +1,21 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+import functools
+from abc import ABC
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from chess.board import Board
+
+
+def print_board(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        if self.board is not None:
+            self.board.print_board()
+        return result
+    return wrapper
 
 
 class BaseChessPiece(ABC):
@@ -17,11 +28,6 @@ class BaseChessPiece(ABC):
         self.is_alive: bool = True
         self.board: Optional["Board"] = None
 
-    @abstractmethod
-    def move(self, *args, **kwargs):
-        """Child classes must implement how they move."""
-        raise NotImplementedError
-
     def die(self):
         self.is_alive = False
 
@@ -30,6 +36,28 @@ class BaseChessPiece(ABC):
 
     def define_board(self, board: "Board"):
         self.board = board
+
+    @print_board
+    def move(self, movement: str):
+        if self.board is None:
+            return "No board attached"
+
+        if movement not in self.board.squares:
+            return f"Invalid square: {movement}"
+
+        target = self.board.get_piece(movement)
+
+        if target is not None:
+            if target.color == self.color:
+                return f"Blocked by own piece at {movement}"
+            self.board.kill_piece(movement)
+
+        old_pos = self.position
+        self.board.squares[old_pos] = None
+        self.position = movement
+        self.board.squares[movement] = self
+
+        return f"{self.name} moved from {old_pos} to {movement}"
 
     def __str__(self):
         return f"{self.color} {self.name} {self.identifier}"
@@ -45,15 +73,9 @@ class Pawn(BaseChessPiece):
     def move(self):
         if self.board is None:
             return "No board attached"
-
         from chess.board_movement import BoardMovement
-
         new_pos = BoardMovement.forward(self.position, self.color, 1)
-        moved = self.board.move_piece(self.position, new_pos)
-
-        if moved:
-            return f"Pawn moved from {self.position} to {new_pos}"
-        return f"Pawn cannot move from {self.position} to {new_pos}"
+        return super().move(new_pos)
 
 
 class Rook(BaseChessPiece):
@@ -61,7 +83,23 @@ class Rook(BaseChessPiece):
         super().__init__(color, "Rook", "R", identifier)
 
     def move(self, direction: str, squares: int):
-        return f"Rook moves {direction} by {squares} squares"
+        if self.board is None:
+            return "No board attached"
+        from chess.board_movement import BoardMovement
+
+        direction = direction.lower()
+        if direction == "left":
+            new_pos = BoardMovement.left(self.position, self.color, squares)
+        elif direction == "right":
+            new_pos = BoardMovement.right(self.position, self.color, squares)
+        elif direction == "forward":
+            new_pos = BoardMovement.forward(self.position, self.color, squares)
+        elif direction == "backward":
+            new_pos = BoardMovement.backward(self.position, self.color, squares)
+        else:
+            return "Invalid direction"
+
+        return super().move(new_pos)
 
 
 class Bishop(BaseChessPiece):

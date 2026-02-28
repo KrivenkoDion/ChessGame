@@ -1,24 +1,25 @@
 from __future__ import annotations
-
-from typing import Dict, Optional, List
+from typing import Optional
 
 from chess.pieces import (
-    Pawn, Rook, Knight, Bishop, Queen, King,
     BaseChessPiece,
+    Pawn, Rook, Knight, Bishop, Queen, King
 )
 
 
 class Board:
     def __init__(self):
-        # keys: a1..h8, values: None or a chess piece
-        self.squares: Dict[str, Optional[BaseChessPiece]] = {
-            f"{chr(col)}{row}": None
-            for col in range(ord("a"), ord("h") + 1)
-            for row in range(1, 9)
+        # create squares: a1..h8 -> None
+        self.squares: dict[str, Optional[BaseChessPiece]] = {
+            f"{chr(c)}{r}": None
+            for c in range(ord("a"), ord("i"))   # a..h
+            for r in range(1, 9)                 # 1..8
         }
 
+        self.setup_board()
+
     def setup_board(self):
-        # --- Black back rank (row 1) ---
+        # --- BLACK back rank on row 1 ---
         self.squares["a1"] = Rook("BLACK", 1)
         self.squares["b1"] = Knight("BLACK", 1)
         self.squares["c1"] = Bishop("BLACK", 1)
@@ -28,7 +29,17 @@ class Board:
         self.squares["g1"] = Knight("BLACK", 2)
         self.squares["h1"] = Rook("BLACK", 2)
 
-        # --- White back rank (row 8) ---
+        # --- BLACK pawns on row 2 ---
+        black_pawns = {f"{chr(c)}2": Pawn("BLACK", i)
+                       for i, c in enumerate(range(ord("a"), ord("i")), start=1)}
+        self.squares.update(black_pawns)
+
+        # --- WHITE pawns on row 7 ---
+        white_pawns = {f"{chr(c)}7": Pawn("WHITE", i)
+                       for i, c in enumerate(range(ord("a"), ord("i")), start=1)}
+        self.squares.update(white_pawns)
+
+        # --- WHITE back rank on row 8 ---
         self.squares["a8"] = Rook("WHITE", 1)
         self.squares["b8"] = Knight("WHITE", 1)
         self.squares["c8"] = Bishop("WHITE", 1)
@@ -38,42 +49,33 @@ class Board:
         self.squares["g8"] = Knight("WHITE", 2)
         self.squares["h8"] = Rook("WHITE", 2)
 
-        # --- Pawns via dict comprehension ---
-        black_pawns = {f"{chr(col)}2": Pawn("BLACK", i)
-                       for i, col in enumerate(range(ord("a"), ord("h") + 1), start=1)}
-        white_pawns = {f"{chr(col)}7": Pawn("WHITE", i)
-                       for i, col in enumerate(range(ord("a"), ord("h") + 1), start=1)}
-
-        self.squares.update(black_pawns)
-        self.squares.update(white_pawns)
-
     def print_board(self):
-        # print row-first: 1..8
-        for row in range(1, 9):
-            row_values: List[Optional[BaseChessPiece]] = [
-                self.squares[f"{chr(col)}{row}"]
-                for col in range(ord("a"), ord("h") + 1)
-            ]
+        # print row-first: row 1..8 (как в примере)
+        for r in range(1, 9):
+            row_values = [self.squares[f"{chr(c)}{r}"] for c in range(ord("a"), ord("i"))]
             print(row_values)
 
-    def find_piece(self, symbol: str, identifier: int, color: str) -> List[BaseChessPiece]:
-        return [
-            piece for _, piece in self.squares.items()
+    def find_piece(self, symbol: str, identifier: int, color: str) -> Optional[BaseChessPiece]:
+        found = [
+            piece
+            for _, piece in self.squares.items()
             if piece is not None
             and piece.symbol == symbol
             and piece.identifier == identifier
             and piece.color == color
         ]
+        return found[0] if found else None
 
     def get_piece(self, square: str) -> Optional[BaseChessPiece]:
+        """Returns the piece that is on a specific square"""
         return self.squares[square]
 
     def is_square_empty(self, square: str) -> bool:
+        """Returns True if the square is empty, False otherwise."""
         return self.get_piece(square) is None
 
     def kill_piece(self, square: str):
         piece = self.get_piece(square)
-        if piece is None:
-            return
-        piece.die()
-        self.squares[square] = None
+        if piece is not None:
+            piece.die()
+            self.squares[square] = None

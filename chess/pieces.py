@@ -50,3 +50,30 @@ class Bishop(BaseChessPiece):
 
     def move(self):
         return "Bishop moves diagonally"
+
+
+class Queen(BaseChessPiece):
+
+    def __init__(self, color: str, identifier: int):
+        super().__init__(color, "Queen", "Q", identifier)
+
+    def move(self):
+        return "Queen moves diagonally and in straight lines"
+
+
+class King(BaseChessPiece):
+
+    def __init__(self, color: str, identifier: int):
+        super().__init__(color, "King", "K", identifier)
+
+    def move(self):
+        return "King moves one square in any direction"
+
+
+class Knight(BaseChessPiece):
+
+    def __init__(self, color: str, identifier: int):
+        super().__init__(color, "Knight", "N", identifier)
+
+    def move(self):
+        return "Knight moves in an L shape"

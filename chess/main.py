@@ -1,18 +1,11 @@
-from chess.pieces import Pawn, Rook, Bishop, Queen, King, Knight
+from chess.board import Board
 
 
 if __name__ == "__main__":
+    board = Board()
+    board.setup_board()
+    board.print_board()
 
-    pieces = [
-        Pawn("WHITE", 1),
-        Rook("BLACK", 1),
-        Bishop("WHITE", 2),
-        Queen("BLACK", 1),
-        King("WHITE", 1),
-        Knight("BLACK", 2)
-    ]
-
-    for piece in pieces:
-        print(piece)
-        print(piece.move())
-        print("-" * 30)
+    # Проверка поиска фигуры
+    found = board.find_piece("-", 1, "WHITE")
+    print("Found:", found)

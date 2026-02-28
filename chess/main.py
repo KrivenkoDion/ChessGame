@@ -5,4 +5,7 @@ if __name__ == "__main__":
     board.print_board()
 
     pawn = board.find_piece("-", 1, "WHITE")
-    print(pawn.move())
+    print("Found:", pawn)
+
+    if pawn:
+        pawn.move()
